@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import datetime
 import glob
 import json
@@ -188,8 +189,19 @@ def set_swift_token():
 
 
 def main():
-    now = datetime.datetime.now()
-    fctime = get_latest_forecasttime(now)
+    parser = argparse.ArgumentParser(
+        prog="ecScrape",
+        description="Download, archive, remap, rechunk and store ECMWF forecasts.",
+    )
+    parser.add_argument("--time", "-t", type=str, default=None)
+
+    args = parser.parse_args()
+
+    if args.time is None:
+        now = datetime.datetime.now()
+        fctime = get_latest_forecasttime(now)
+    else:
+        fctime = datetime.datetime.fromisoformat(args.time)
 
     isostr = fctime.strftime("%Y-%m-%dT%HZ")
     outdir = pathlib.Path(f"/scratch/m/m300575/tmp/{isostr}")
