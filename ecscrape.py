@@ -204,7 +204,7 @@ def main():
         fctime = datetime.datetime.fromisoformat(args.time)
 
     isostr = fctime.strftime("%Y-%m-%dT%HZ")
-    outdir = pathlib.Path(f"/scratch/m/m300575/tmp/{isostr}")
+    outdir = pathlib.Path(f"/work/mh0066/m300575/ecscrape/archive/{isostr}")
     outdir.mkdir(parents=True, exist_ok=True)
 
     download_forecast(fctime, outdir=outdir)
