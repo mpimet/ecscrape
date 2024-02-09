@@ -97,6 +97,25 @@ def remap(var, src_idx, weights, valid):
     return np.where(valid, (var[src_idx] * weights).sum(axis=-1), np.nan)
 
 
+def bitround(ds, keepbits=13, codec=None):
+    def _bitround(var, keepbits, codec=None):
+        if codec is None:
+            codec = numcodecs.BitRound(keepbits=keepbits)
+
+        return codec.decode(codec.encode(var))
+
+    ds_rounded = xr.apply_ufunc(
+        _bitround,
+        ds,
+        kwargs={"keepbits": keepbits},
+        dask="parallelized",
+    )
+    for var in ds:
+        ds_rounded[var].attrs = ds[var].attrs
+
+    return ds_rounded
+
+
 def healpix_dataset(dataset, zoom=7):
     grid_lon, grid_lat = get_latlon_grid(hpz=zoom)
     weight_kwargs = get_weights(
@@ -123,7 +142,7 @@ def healpix_dataset(dataset, zoom=7):
                 "cell": 4**7,
             }
         )
-        .astype("float16")
+        .pipe(bitround)
     )
 
     for var in dataset:
