@@ -21,14 +21,15 @@ def get_latest_forecasttime(dt):
     return datetime.datetime(dt.year, dt.month, dt.day, dt.hour // 12 * 12)
 
 
-def get_griblist(urlpath):
-    """Yield relative paths of all GRIB2 files in a ECMWF forecast."""
-    ret = requests.get(urlpath)
-
-    if ret.status_code != 200:
+def check_urlpath(urlpath):
+    """Check if urlpath exists."""
+    if requests.get(urlpath).status_code != 200:
         raise Exception(f"Forecast not availablae at: {urlpath}")
 
-    for l in ret.text.split("\n"):
+
+def get_griblist(urlpath):
+    """Yield relative paths of all GRIB2 files in a ECMWF forecast."""
+    for l in requests.get(urlpath).text.split("\n"):
         regex = re.compile('<a href="(.*)">(.*\.grib2)</a>')
         if m := regex.match(l):
             relurl, filename = m.groups()
@@ -47,9 +48,16 @@ def download_forecast(fctime, outdir):
     baseurl = "https://data.ecmwf.int"
     date, hour = fctime.strftime("%Y%m%d"), fctime.strftime("%H")
 
-    gribfiles = get_griblist(f"{baseurl}/forecasts/{date}/{hour}z/0p25/oper/")
+    # On 2024-02-29 ECMWF introduced an additional level to distinguish
+    # the classical and an AI forecast.
+    try:
+        urlpath = f"{baseurl}/forecasts/{date}/{hour}z/0p25/oper/"
+        check_urlpath(urlpath)
+    except:
+        urlpath = f"{baseurl}/forecasts/{date}/{hour}z/ifs/0p25/oper/"
+        check_urlpath(urlpath)
 
-    for relpath, filename in gribfiles:
+    for relpath, filename in get_griblist(urlpath):
         download_file(f"{baseurl}{relpath}", outdir / filename)
         gribscan.write_index((outdir / filename).as_posix(), force=True)
 
