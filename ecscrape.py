@@ -30,7 +30,7 @@ def check_urlpath(urlpath):
 def get_griblist(urlpath):
     """Yield relative paths of all GRIB2 files in a ECMWF forecast."""
     for l in requests.get(urlpath).text.split("\n"):
-        regex = re.compile('<a href="(.*)">(.*\.grib2)</a>')
+        regex = re.compile(r'<a href="(.*)">(.*\.grib2)</a>')
         if m := regex.match(l):
             relurl, filename = m.groups()
             yield relurl, filename
