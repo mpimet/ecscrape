@@ -196,6 +196,19 @@ def set_swift_token():
                 os.environ[k] = v
 
 
+async def get_client(**kwargs):
+    import aiohttp
+    import aiohttp_retry
+
+    retry_options = aiohttp_retry.ExponentialRetry(
+        attempts=3, exceptions={OSError, aiohttp.ServerDisconnectedError}
+    )
+    retry_client = aiohttp_retry.RetryClient(
+        raise_for_status=False, retry_options=retry_options
+    )
+    return retry_client
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="ecScrape",
@@ -222,7 +235,10 @@ def main():
 
     set_swift_token()
     urlpath = f"swift://swift.dkrz.de/dkrz_948e7d4bbfbb445fbff5315fc433e36a/data_ecmwf/{isostr}.zarr"
-    healpix_dataset(ecmwf).to_zarr(urlpath)
+    healpix_dataset(ecmwf).to_zarr(
+        urlpath,
+        storage_options={"get_client": get_client},
+    )
 
 
 if __name__ == "__main__":
