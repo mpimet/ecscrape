@@ -1,0 +1,9 @@
+aiohttp
+aiohttp_retry
+gribscan
+healpy
+numcodecs
+numpy
+requests
+scipy
+xarray

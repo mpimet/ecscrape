@@ -1,0 +1,12 @@
+name: ecscrape
+dependencies:
+  - python>=3.11
+  - aiohttp
+  - aiohttp_retry
+  - gribscan
+  - healpy
+  - numcodecs
+  - numpy
+  - requests
+  - scipy
+  - xarray
