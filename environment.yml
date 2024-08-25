@@ -2,9 +2,10 @@ name: ecscrape
 dependencies:
   - python==3.12
   - aiohttp
+  - cartopy
   - cfgrib
   - eccodes
-  - healpy
+  - healpy>=1.16.3
   - numcodecs
   - numpy
   - requests
