@@ -1,1 +1,1 @@
-from .ecscrape import *
+from . import ecscrape as ecscrape
