@@ -2,11 +2,15 @@ name: ecscrape
 dependencies:
   - python==3.12
   - aiohttp
-  - aiohttp_retry
-  - gribscan
+  - cfgrib
+  - eccodes
   - healpy
   - numcodecs
   - numpy
   - requests
   - scipy
   - xarray
+  - pip
+  - pip:
+    - aiohttp_retry
+    - gribscan
