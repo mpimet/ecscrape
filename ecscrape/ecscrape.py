@@ -159,7 +159,9 @@ def healpix_dataset(dataset, zoom=7):
             "long_name": dataset[var].attrs["name"],
             "standard_name": dataset[var].attrs.get("cfName", ""),
             "units": dataset[var].attrs["units"],
-            "type": "forecast" if dataset[var].attrs["dataType"] == "fc" else "analysis",
+            "type": "forecast"
+            if dataset[var].attrs["dataType"] == "fc"
+            else "analysis",
             "levtype": dataset[var].attrs["typeOfLevel"],
         }
 
@@ -188,10 +190,10 @@ def healpix_dataset(dataset, zoom=7):
 
 
 def set_swift_token():
-    regex = re.compile('setenv (.*) (.*)$')
+    regex = re.compile("setenv (.*) (.*)$")
     with open(pathlib.Path("~/.swiftenv").expanduser(), "r") as fp:
         for line in fp.readlines():
-            if (m := regex.match(line)):
+            if m := regex.match(line):
                 k, v = m.groups()
                 os.environ[k] = v
 
