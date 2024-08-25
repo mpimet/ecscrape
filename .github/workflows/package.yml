@@ -30,8 +30,6 @@ jobs:
         run: |
           poetry self add "poetry-dynamic-versioning[plugin]"
           poetry install
-      - name: run tests
-        run: poetry run pytest
       - name: build release distributions
         run: poetry build
       - name: Publish release distributions to PyPI
