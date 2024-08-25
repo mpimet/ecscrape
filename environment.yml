@@ -1,6 +1,6 @@
 name: ecscrape
 dependencies:
-  - python>=3.11
+  - python==3.12
   - aiohttp
   - aiohttp_retry
   - gribscan
