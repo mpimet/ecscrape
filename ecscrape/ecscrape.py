@@ -52,7 +52,7 @@ def download_forecast(fctime, outdir):
     try:
         urlpath = f"{baseurl}/forecasts/{date}/{hour}z/0p25/oper/"
         check_urlpath(urlpath)
-    except:
+    except Exception:
         urlpath = f"{baseurl}/forecasts/{date}/{hour}z/ifs/0p25/oper/"
         check_urlpath(urlpath)
 
