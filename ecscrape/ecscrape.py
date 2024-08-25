@@ -217,6 +217,8 @@ def main():
         description="Download, archive, remap, rechunk and store ECMWF forecasts.",
     )
     parser.add_argument("--time", "-t", type=str, default=None)
+    parser.add_argument("--cache", "-c", type=str)
+    parser.add_argument("--out", "-o", type=str)
 
     args = parser.parse_args()
 
@@ -226,8 +228,7 @@ def main():
     else:
         fctime = datetime.datetime.fromisoformat(args.time)
 
-    isostr = fctime.strftime("%Y-%m-%dT%HZ")
-    outdir = pathlib.Path(f"/work/mh0066/m300575/ecscrape/archive/{isostr}")
+    outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
 
     download_forecast(fctime, outdir=outdir)
@@ -236,9 +237,8 @@ def main():
     ecmwf = xr.open_mfdataset(datasets, engine="zarr")
 
     set_swift_token()
-    urlpath = f"swift://swift.dkrz.de/dkrz_948e7d4bbfbb445fbff5315fc433e36a/data_ecmwf/{isostr}.zarr"
     healpix_dataset(ecmwf).to_zarr(
-        urlpath,
+        args.out,
         storage_options={"get_client": get_client},
     )
 
