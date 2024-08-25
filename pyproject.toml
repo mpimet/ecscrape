@@ -24,6 +24,9 @@ requests = "*"
 scipy = "*"
 xarray = "*"
 
+[tool.poetry.scripts]
+ecscrape = "ecscrape.tools:main"
+
 [tool.poetry-dynamic-versioning]
 enable = true
 vcs = "git"

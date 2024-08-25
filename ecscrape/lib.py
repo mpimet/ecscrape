@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-import argparse
 import datetime
 import json
 import os
@@ -187,39 +185,3 @@ async def get_client(**kwargs):
         raise_for_status=False, retry_options=retry_options
     )
     return retry_client
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        prog="ecScrape",
-        description="Download, archive, remap, rechunk and store ECMWF forecasts.",
-    )
-    parser.add_argument("--time", "-t", type=str, default=None)
-    parser.add_argument("--cache", "-c", type=str)
-    parser.add_argument("--out", "-o", type=str)
-
-    args = parser.parse_args()
-
-    if args.time is None:
-        now = datetime.datetime.now()
-        fctime = get_latest_forecasttime(now)
-    else:
-        fctime = datetime.datetime.fromisoformat(args.time)
-
-    outdir = pathlib.Path(args.outdir)
-    outdir.mkdir(parents=True, exist_ok=True)
-
-    download_forecast(fctime, outdir=outdir)
-    datasets = create_datasets(outdir=outdir)
-
-    ecmwf = xr.open_mfdataset(datasets, engine="zarr")
-
-    set_swift_token()
-    healpix_dataset(ecmwf).to_zarr(
-        args.out,
-        storage_options={"get_client": get_client},
-    )
-
-
-if __name__ == "__main__":
-    main()

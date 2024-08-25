@@ -1,1 +1,1 @@
-from . import ecscrape as ecscrape
+from . import lib as lib
