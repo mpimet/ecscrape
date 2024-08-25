@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import datetime
-import glob
 import json
 import os
 import pathlib
@@ -13,7 +12,7 @@ import healpy as hp
 import numcodecs
 import numpy as np
 import xarray as xr
-from scipy.spatial import Delaunay
+from easygems.remap import compute_weights_delaunay, apply_weights
 
 
 def get_latest_forecasttime(dt):
@@ -29,9 +28,9 @@ def check_urlpath(urlpath):
 
 def get_griblist(urlpath):
     """Yield relative paths of all GRIB2 files in a ECMWF forecast."""
-    for l in requests.get(urlpath).text.split("\n"):
+    for line in requests.get(urlpath).text.split("\n"):
         regex = re.compile(r'<a href="(.*)">(.*\.grib2)</a>')
-        if m := regex.match(l):
+        if m := regex.match(line):
             relurl, filename = m.groups()
             yield relurl, filename
 
@@ -85,27 +84,6 @@ def get_latlon_grid(hpz=7, nest=True):
     return (lons + 180) % 360 - 180, lats
 
 
-def get_weights(points, xi):
-    """Compute interpolation weights."""
-    tri = Delaunay(np.stack(points, axis=-1))  # Compute the triangulation
-    targets = np.stack(xi, axis=-1)
-    triangles = tri.find_simplex(targets)
-
-    X = tri.transform[triangles, :2]
-    Y = targets - tri.transform[triangles, 2]
-    b = np.einsum("...jk,...k->...j", X, Y)
-    weights = np.concatenate([b, 1 - b.sum(axis=-1)[..., np.newaxis]], axis=-1)
-    src_idx = tri.simplices[triangles]
-    valid = triangles >= 0
-
-    return {"src_idx": src_idx, "weights": weights, "valid": valid}
-
-
-def remap(var, src_idx, weights, valid):
-    """Apply given interpolation weights."""
-    return np.where(valid, (var[src_idx] * weights).sum(axis=-1), np.nan)
-
-
 def bitround(ds, keepbits=13, codec=None):
     def _bitround(var, keepbits, codec=None):
         if codec is None:
@@ -127,13 +105,13 @@ def bitround(ds, keepbits=13, codec=None):
 
 def healpix_dataset(dataset, zoom=7):
     grid_lon, grid_lat = get_latlon_grid(hpz=zoom)
-    weight_kwargs = get_weights(
+    weight_kwargs = compute_weights_delaunay(
         points=(dataset.lon, dataset.lat), xi=(grid_lon, grid_lat)
     )
 
     ds_remap = (
         xr.apply_ufunc(
-            remap,
+            apply_weights,
             dataset,
             kwargs=weight_kwargs,
             input_core_dims=[["value"]],
@@ -159,7 +137,9 @@ def healpix_dataset(dataset, zoom=7):
             "long_name": dataset[var].attrs["name"],
             "standard_name": dataset[var].attrs.get("cfName", ""),
             "units": dataset[var].attrs["units"],
-            "type": "forecast" if dataset[var].attrs["dataType"] == "fc" else "analysis",
+            "type": "forecast"
+            if dataset[var].attrs["dataType"] == "fc"
+            else "analysis",
             "levtype": dataset[var].attrs["typeOfLevel"],
         }
 
@@ -188,10 +168,10 @@ def healpix_dataset(dataset, zoom=7):
 
 
 def set_swift_token():
-    regex = re.compile('setenv (.*) (.*)$')
+    regex = re.compile("setenv (.*) (.*)$")
     with open(pathlib.Path("~/.swiftenv").expanduser(), "r") as fp:
         for line in fp.readlines():
-            if (m := regex.match(line)):
+            if m := regex.match(line):
                 k, v = m.groups()
                 os.environ[k] = v
 
@@ -215,6 +195,8 @@ def main():
         description="Download, archive, remap, rechunk and store ECMWF forecasts.",
     )
     parser.add_argument("--time", "-t", type=str, default=None)
+    parser.add_argument("--cache", "-c", type=str)
+    parser.add_argument("--out", "-o", type=str)
 
     args = parser.parse_args()
 
@@ -224,8 +206,7 @@ def main():
     else:
         fctime = datetime.datetime.fromisoformat(args.time)
 
-    isostr = fctime.strftime("%Y-%m-%dT%HZ")
-    outdir = pathlib.Path(f"/work/mh0066/m300575/ecscrape/archive/{isostr}")
+    outdir = pathlib.Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
 
     download_forecast(fctime, outdir=outdir)
@@ -234,9 +215,8 @@ def main():
     ecmwf = xr.open_mfdataset(datasets, engine="zarr")
 
     set_swift_token()
-    urlpath = f"swift://swift.dkrz.de/dkrz_948e7d4bbfbb445fbff5315fc433e36a/data_ecmwf/{isostr}.zarr"
     healpix_dataset(ecmwf).to_zarr(
-        urlpath,
+        args.out,
         storage_options={"get_client": get_client},
     )
 

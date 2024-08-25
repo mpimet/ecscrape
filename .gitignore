@@ -1,1 +1,4 @@
-archive/
+*.pyc
+__pycache__
+/dist
+_version.py
