@@ -1,0 +1,51 @@
+[tool.poetry]
+name = "ecscrape"
+version = "0"
+description = "Scrape the ECMWF IFS forecast."
+authors = ["Lukas Kluft <lukas.kluft@mpimet.mpg.de>"]
+readme = "README.md"
+license = "MIT"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+aiohttp = "*"
+aiohttp_retry = "*"
+gribscan = "*"
+healpy = "*"
+numcodecs = "*"
+numpy = "*"
+requests = "*"
+scipy = "*"
+xarray = "*"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+
+[tool.poetry-dynamic-versioning.files."ecscrape/_version.py"]
+persistent-substitution = true
+initial-content = """
+  TYPE_CHECKING = False
+  if TYPE_CHECKING:
+      from typing import Tuple, Union
+      VERSION_TUPLE = Tuple[Union[int, str], ...]
+  else:
+      VERSION_TUPLE = object
+
+  version: str
+  __version__: str
+  __version_tuple__: VERSION_TUPLE
+  version_tuple: VERSION_TUPLE
+
+  __version__ = '0.0.0'
+  __version_tuple__ = (0, 0, 0)
+  """
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
