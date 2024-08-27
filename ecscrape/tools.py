@@ -15,6 +15,8 @@ def main():
     parser.add_argument("--time", "-t", type=str, default=None)
     parser.add_argument("--cache", "-c", type=Path)
     parser.add_argument("--store", "-s", type=Path)
+    parser.add_argument("--model", type=str, default="ifs")
+    parser.add_argument("--stream", type=str, default="oper", choices=["oper", "enfo"])
 
     args = parser.parse_args()
 
@@ -26,10 +28,18 @@ def main():
 
     # Download GRIB2 files into cache (and build indices)
     args.cache.mkdir(parents=True, exist_ok=True)
-    lib.download_forecast(fctime, outdir=args.cache)
+    lib.download_forecast(
+        fctime,
+        outdir=args.cache,
+        model=args.model,
+        stream=args.stream,
+    )
 
     # Create reference filesystems from indices
-    datasets = lib.create_datasets(outdir=args.cache)
+    datasets = lib.create_datasets(
+        outdir=args.cache,
+        stream=args.stream,
+    )
 
     # Merge datasets and convert to Zarr store
     ecmwf = xr.open_mfdataset(datasets, engine="zarr")
