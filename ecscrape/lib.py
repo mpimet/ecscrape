@@ -53,10 +53,15 @@ def download_forecast(fctime, outdir, model="ifs", resol="0p25", stream="oper"):
         gribscan.write_index((outdir / filename).as_posix(), force=True)
 
 
-def create_datasets(outdir):
+def create_datasets(outdir, stream="oper"):
+    if stream == "enfo":
+        magician = gribscan.magician.IFSMagician()
+    else:
+        magician = gribscan.magician.EnsembleMagician()
+
     datasets = gribscan.grib_magic(
         outdir.glob("*.index"),
-        magician=gribscan.magician.IFSMagician(),
+        magician=magician,
         global_prefix=outdir,
     )
 
