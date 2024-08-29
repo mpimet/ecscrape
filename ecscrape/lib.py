@@ -84,9 +84,9 @@ def download_forecast(
 
 def create_datasets(outdir, stream="oper"):
     if stream == "enfo":
-        magician = gribscan.magician.IFSMagician()
-    else:
         magician = gribscan.magician.EnsembleMagician()
+    else:
+        magician = gribscan.magician.IFSMagician()
 
     datasets = gribscan.grib_magic(
         outdir.glob("*.index"),
@@ -171,13 +171,14 @@ def healpix_dataset(dataset, zoom=7):
 
     ds_remap["time"].attrs["axis"] = "T"
 
-    ds_remap["level"].attrs = {
-        "units": "hPa",
-        "positive": "down",
-        "standard_name": "air_pressure",
-        "long_name": "Air pressure at model level",
-        "axis": "Z",
-    }
+    if "level" in ds_remap.dims:
+        ds_remap["level"].attrs = {
+            "units": "hPa",
+            "positive": "down",
+            "standard_name": "air_pressure",
+            "long_name": "Air pressure at model level",
+            "axis": "Z",
+        }
 
     ds_remap["crs"] = xr.DataArray(
         name="crs",

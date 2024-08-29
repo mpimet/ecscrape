@@ -12,6 +12,7 @@ dependencies:
   - requests
   - scipy
   - xarray
+  - zarr
   - pip
   - pip:
     - aiohttp_retry
