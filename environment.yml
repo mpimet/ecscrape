@@ -4,6 +4,7 @@ dependencies:
   - aiohttp
   - cartopy
   - cfgrib
+  - dask
   - eccodes
   - fsspec
   - healpy>=1.16.3
