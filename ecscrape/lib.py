@@ -59,6 +59,10 @@ def download_grib2(urlpath, outfile, mode="wb", grib_filter=None):
 
         headers = get_headers([i for i in index if grib_filter(i)])
 
+    # For byte-ranges, this will generate a multi-part response.
+    # Currently, this response is dumped as is into the GIRB2 file.
+    # While it is technically possible to parse these files again,
+    # this should be cleaned at some point by merging the parts in a clean way.
     r = requests.get(urlpath, headers=headers)
     with open(outfile, mode=mode) as fp:
         fp.write(r.content)
