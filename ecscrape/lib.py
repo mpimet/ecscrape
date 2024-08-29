@@ -1,7 +1,5 @@
 import datetime
 import json
-import os
-import pathlib
 import re
 import requests
 
@@ -192,15 +190,6 @@ def healpix_dataset(dataset, zoom=7):
     )
 
     return ds_remap
-
-
-def set_swift_token():
-    regex = re.compile("setenv (.*) (.*)$")
-    with open(pathlib.Path("~/.swiftenv").expanduser(), "r") as fp:
-        for line in fp.readlines():
-            if m := regex.match(line):
-                k, v = m.groups()
-                os.environ[k] = v
 
 
 async def get_client(**kwargs):

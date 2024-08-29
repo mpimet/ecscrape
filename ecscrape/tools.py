@@ -54,7 +54,6 @@ def main():
 
     # Merge datasets and convert to Zarr store
     ecmwf = xr.open_mfdataset(datasets, engine="zarr")
-    lib.set_swift_token()
     lib.healpix_dataset(ecmwf).to_zarr(
         args.store,
         storage_options={"get_client": lib.get_client},
