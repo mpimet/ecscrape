@@ -42,7 +42,7 @@ def gribindex2range(index):
     start = index["_offset"]
     length = index["_length"]
 
-    return f"{start}-{start + length}"
+    return f"{start}-{start + length - 1}"
 
 
 def get_headers(indices):
