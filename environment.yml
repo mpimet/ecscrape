@@ -15,4 +15,4 @@ dependencies:
   - pip:
     - aiohttp_retry
     - easygems
-    - gribscan
+    - gribscan>=0.0.11

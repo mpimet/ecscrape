@@ -41,28 +41,27 @@ def download_file(urlpath, localpath, chunk_size=2**16):
                     fp.write(buf)
 
 
-def download_forecast(fctime, outdir):
+def download_forecast(fctime, outdir, model="ifs", resol="0p25", stream="oper"):
     baseurl = "https://data.ecmwf.int"
     date, hour = fctime.strftime("%Y%m%d"), fctime.strftime("%H")
 
-    # On 2024-02-29 ECMWF introduced an additional level to distinguish
-    # the classical and an AI forecast.
-    try:
-        urlpath = f"{baseurl}/forecasts/{date}/{hour}z/0p25/oper/"
-        check_urlpath(urlpath)
-    except Exception:
-        urlpath = f"{baseurl}/forecasts/{date}/{hour}z/ifs/0p25/oper/"
-        check_urlpath(urlpath)
+    urlpath = f"{baseurl}/forecasts/{date}/{hour}z/{model}/{resol}/{stream}/"
+    check_urlpath(urlpath)
 
     for relpath, filename in get_griblist(urlpath):
         download_file(f"{baseurl}{relpath}", outdir / filename)
         gribscan.write_index((outdir / filename).as_posix(), force=True)
 
 
-def create_datasets(outdir):
+def create_datasets(outdir, stream="oper"):
+    if stream == "enfo":
+        magician = gribscan.magician.IFSMagician()
+    else:
+        magician = gribscan.magician.EnsembleMagician()
+
     datasets = gribscan.grib_magic(
         outdir.glob("*.index"),
-        magician=gribscan.magician.IFSMagician(),
+        magician=magician,
         global_prefix=outdir,
     )
 
