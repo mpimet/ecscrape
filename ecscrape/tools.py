@@ -36,14 +36,16 @@ def main():
     else:
         fctime = datetime.datetime.fromisoformat(args.time)
 
+    if args.stream == "oper":
+        stem = f"{fctime:%Y-%m-%dT%HZ}"
+    else:
+        stem = f"{fctime:%Y-%m-%dT%HZ}-{args.stream}"
+
     if args.cache is None:
-        args.cache = Path(f"{fctime:%Y-%m-%dT%HZ}")
+        args.cache = Path(stem)
 
     if args.store is None:
-        if args.stream == "oper":
-            args.store = Path(f"{fctime:%Y-%m-%dT%HZ}-{args.stream}.zarr")
-        else:
-            args.store = Path(f"{fctime:%Y-%m-%dT%HZ}.zarr")
+        args.store = Path(f"{stem}.zarr")
 
     # Download GRIB2 files into cache (and build indices)
     args.cache.mkdir(parents=True, exist_ok=True)
