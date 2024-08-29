@@ -7,6 +7,15 @@ import xarray as xr
 from . import lib
 
 
+class VariableFilter:
+    def __init__(self, variables):
+        """Returns `True` if GRIB index contains variable from user defined list."""
+        self.variables = variables
+
+    def __call__(self, index):
+        return index["param"] in self.variables
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="ecScrape",
@@ -17,6 +26,7 @@ def main():
     parser.add_argument("--store", "-s", type=Path)
     parser.add_argument("--model", type=str, default="ifs")
     parser.add_argument("--stream", type=str, default="oper", choices=["oper", "enfo"])
+    parser.add_argument("--variables", default=None, type=lambda s: s.split(","))
 
     args = parser.parse_args()
 
@@ -33,6 +43,7 @@ def main():
         outdir=args.cache,
         model=args.model,
         stream=args.stream,
+        grib_filter=VariableFilter(args.variables) if args.variables else None,
     )
 
     # Create reference filesystems from indices

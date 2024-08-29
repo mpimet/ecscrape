@@ -5,6 +5,7 @@ import pathlib
 import re
 import requests
 
+import fsspec
 import gribscan
 import healpy as hp
 import numcodecs
@@ -33,15 +34,41 @@ def get_griblist(urlpath):
             yield relurl, filename
 
 
-def download_file(urlpath, localpath, chunk_size=2**16):
-    with requests.get(urlpath, stream=True) as ret:
-        with open(localpath, "wb") as fp:
-            for buf in ret.iter_content(chunk_size=chunk_size):
-                if buf:
-                    fp.write(buf)
+def parse_gribindex(content):
+    """Parse a JSON lines GRIB2 index."""
+    return [json.loads(line) for line in content.decode().splitlines()]
 
 
-def download_forecast(fctime, outdir, model="ifs", resol="0p25", stream="oper"):
+def gribindex2range(index):
+    """Convert a GRIB2 index entry into a byte range."""
+    start = index["_offset"]
+    length = index["_length"]
+
+    return f"{start}-{start + length}"
+
+
+def get_headers(indices):
+    """Convert a list of GRIB2 indices into a byte range request."""
+    return {"Range": "bytes=" + ", ".join([gribindex2range(s) for s in indices])}
+
+
+def download_grib2(urlpath, outfile, mode="wb", grib_filter=None):
+    if grib_filter is None:
+        headers = None
+    else:
+        with fsspec.open(urlpath.replace(".grib2", ".index")) as fp:
+            index = parse_gribindex(fp.read())
+
+        headers = get_headers([i for i in index if grib_filter(i)])
+
+    r = requests.get(urlpath, headers=headers)
+    with open(outfile, mode=mode) as fp:
+        fp.write(r.content)
+
+
+def download_forecast(
+    fctime, outdir, model="ifs", resol="0p25", stream="oper", grib_filter=None
+):
     baseurl = "https://data.ecmwf.int"
     date, hour = fctime.strftime("%Y%m%d"), fctime.strftime("%H")
 
@@ -49,7 +76,9 @@ def download_forecast(fctime, outdir, model="ifs", resol="0p25", stream="oper"):
     check_urlpath(urlpath)
 
     for relpath, filename in get_griblist(urlpath):
-        download_file(f"{baseurl}{relpath}", outdir / filename)
+        download_grib2(
+            f"{baseurl}{relpath}", outdir / filename, grib_filter=grib_filter
+        )
         gribscan.write_index((outdir / filename).as_posix(), force=True)
 
 
