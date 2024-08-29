@@ -84,9 +84,9 @@ def download_forecast(
 
 def create_datasets(outdir, stream="oper"):
     if stream == "enfo":
-        magician = gribscan.magician.IFSMagician()
-    else:
         magician = gribscan.magician.EnsembleMagician()
+    else:
+        magician = gribscan.magician.IFSMagician()
 
     datasets = gribscan.grib_magic(
         outdir.glob("*.index"),
