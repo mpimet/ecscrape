@@ -59,6 +59,11 @@ def download_grib2(urlpath, outfile, mode="wb", grib_filter=None):
         with fsspec.open(urlpath.replace(".grib2", ".index")) as fp:
             index = parse_gribindex(fp.read())
 
+        index = [i for i in index if grib_filter(i)]
+        if len(index) == 0:
+            # Skip download if no variable is requested
+            raise ValueError("No variables to download.")
+
         headers = get_headers([i for i in index if grib_filter(i)])
         r_multipart = requests.get(urlpath, headers=headers)
 
@@ -80,15 +85,19 @@ def download_forecast(
     check_urlpath(urlpath)
 
     for relpath, filename in get_griblist(urlpath):
-        download_grib2(
-            urlpath=f"{baseurl}{relpath}",
-            outfile=outdir / filename,
-            grib_filter=grib_filter,
-        )
-        gribscan.write_index(
-            gribfile=f"{outdir}/./{filename}",
-            force=True,
-        )
+        try:
+            download_grib2(
+                urlpath=f"{baseurl}{relpath}",
+                outfile=outdir / filename,
+                grib_filter=grib_filter,
+            )
+        except ValueError:
+            continue
+        else:
+            gribscan.write_index(
+                gribfile=f"{outdir}/./{filename}",
+                force=True,
+            )
 
 
 def create_datasets(outdir, stream="oper"):
