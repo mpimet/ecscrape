@@ -20,3 +20,4 @@ dependencies:
     - aiohttp_retry
     - easygems
     - gribscan>=0.0.12
+    - swiftspec

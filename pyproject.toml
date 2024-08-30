@@ -25,6 +25,7 @@ numpy = "*"
 requests = "*"
 requests-toolbelt = "*"
 scipy = "*"
+swiftspec = "*"
 xarray = "*"
 zarr = "*"
 
