@@ -77,9 +77,14 @@ def download_forecast(
 
     for relpath, filename in get_griblist(urlpath):
         download_grib2(
-            f"{baseurl}{relpath}", outdir / filename, grib_filter=grib_filter
+            urlpath=f"{baseurl}{relpath}",
+            outfile=outdir / filename,
+            grib_filter=grib_filter,
         )
-        gribscan.write_index((outdir / filename).as_posix(), force=True)
+        gribscan.write_index(
+            gribfile=f"{outdir}/./{filename}",
+            force=True,
+        )
 
 
 def create_datasets(outdir, stream="oper"):
@@ -91,7 +96,7 @@ def create_datasets(outdir, stream="oper"):
     datasets = gribscan.grib_magic(
         outdir.glob("*.index"),
         magician=magician,
-        global_prefix=outdir,
+        global_prefix=outdir.resolve(),
     )
 
     for name, ref in datasets.items():
