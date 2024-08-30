@@ -47,25 +47,23 @@ def gribindex2range(index):
 
 def get_headers(indices):
     """Convert a list of GRIB2 indices into a byte range request."""
-    return {"Range": "bytes=" + ", ".join([gribindex2range(s) for s in indices])}
+    return [{"Range": f"bytes={gribindex2range(s)}"} for s in indices]
 
 
 def download_grib2(urlpath, outfile, mode="wb", grib_filter=None):
     if grib_filter is None:
-        headers = None
+        r = requests.get(urlpath)
+        content = r.content
     else:
         with fsspec.open(urlpath.replace(".grib2", ".index")) as fp:
             index = parse_gribindex(fp.read())
 
         headers = get_headers([i for i in index if grib_filter(i)])
+        responses = [requests.get(urlpath, headers=h) for h in headers]
+        content = b"".join(r.content for r in responses)
 
-    # For byte-ranges, this will generate a multi-part response.
-    # Currently, this response is dumped as is into the GIRB2 file.
-    # While it is technically possible to parse these files again,
-    # this should be cleaned at some point by merging the parts in a clean way.
-    r = requests.get(urlpath, headers=headers)
     with open(outfile, mode=mode) as fp:
-        fp.write(r.content)
+        fp.write(content)
 
 
 def download_forecast(
