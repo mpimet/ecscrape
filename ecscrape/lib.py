@@ -2,6 +2,7 @@ import datetime
 import json
 import re
 import requests
+from requests_toolbelt.multipart import decoder
 
 import fsspec
 import gribscan
@@ -47,7 +48,7 @@ def gribindex2range(index):
 
 def get_headers(indices):
     """Convert a list of GRIB2 indices into a byte range request."""
-    return [{"Range": f"bytes={gribindex2range(s)}"} for s in indices]
+    return {"Range": "bytes=" + ", ".join([gribindex2range(s) for s in indices])}
 
 
 def download_grib2(urlpath, outfile, mode="wb", grib_filter=None):
@@ -59,8 +60,11 @@ def download_grib2(urlpath, outfile, mode="wb", grib_filter=None):
             index = parse_gribindex(fp.read())
 
         headers = get_headers([i for i in index if grib_filter(i)])
-        responses = [requests.get(urlpath, headers=h) for h in headers]
-        content = b"".join(r.content for r in responses)
+        r_multipart = requests.get(urlpath, headers=headers)
+
+        content = b"".join(
+            p.content for p in decoder.MultipartDecoder.from_response(r_multipart).parts
+        )
 
     with open(outfile, mode=mode) as fp:
         fp.write(content)
