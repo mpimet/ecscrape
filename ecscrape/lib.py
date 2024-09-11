@@ -6,7 +6,7 @@ from requests_toolbelt.multipart import decoder
 
 import fsspec
 import gribscan
-import healpy as hp
+import healpix as hp
 import numcodecs
 import numpy as np
 import xarray as xr
