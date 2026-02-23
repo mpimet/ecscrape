@@ -183,12 +183,7 @@ def healpix_dataset(dataset, zoom=7):
                 "output_sizes": {"cell": grid_lon.size},
             },
         )
-        .chunk(
-            {
-                "time": 6,
-                "cell": 4**7,
-            }
-        )
+        .chunk(time=6, cell=-1, level=-1, soil_layer=-1)
         .pipe(bitround)
     )
 
