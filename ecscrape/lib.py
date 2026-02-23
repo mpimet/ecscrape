@@ -158,6 +158,45 @@ def bitround(ds, keepbits=13, codec=None):
     return ds_rounded
 
 
+def get_chunks(sizes):
+    match tuple(sizes.keys()):
+        case ("time", level, "cell"):
+            chunks = {
+                "time": 6,
+                level: 4,
+                "cell": 4**7,
+            }
+        case ("time", "cell"):
+            chunks = {
+                "time": 6,
+                "cell": 4**8,
+            }
+        case (single_dim,):
+            chunks = {single_dim: sizes[single_dim]}
+        case _:
+            chunks = {}
+
+    return tuple((chunks[d] for d in sizes))
+
+
+def get_dtype(da):
+    if np.issubdtype(da.dtype, np.floating):
+        return "float32"
+    else:
+        return da.dtype
+
+
+def get_encoding(dataset):
+    return {
+        var: {
+            "compressor": numcodecs.Blosc("zstd", clevel=6, shuffle=2),
+            "dtype": get_dtype(dataset[var]),
+            "chunks": get_chunks(dataset[var].sizes),
+        }
+        for var in dataset.variables
+    }
+
+
 def healpix_dataset(dataset, zoom=7):
     if all(c in dataset.dims for c in ("lat", "lon")):
         # Create one-dimensional view of lat/lon grid and

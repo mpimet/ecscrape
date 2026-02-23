@@ -88,8 +88,11 @@ def main():
     )
 
     # Merge datasets and convert to Zarr store
-    ecmwf = xr.open_mfdataset(datasets, engine="zarr")
-    lib.healpix_dataset(ecmwf).to_zarr(
+    ecmwf = xr.open_mfdataset(datasets, engine="zarr", data_vars="all")
+    ds = lib.healpix_dataset(ecmwf)
+    ds.to_zarr(
         store,
         storage_options={"get_client": lib.get_client},
+        encoding=lib.get_encoding(ds),
+        zarr_format=2,
     )
