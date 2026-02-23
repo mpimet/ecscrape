@@ -125,7 +125,18 @@ def get_latlon_grid(hpz=7, nest=True):
         2**hpz, np.arange(hp.nside2npix(2**hpz)), nest=nest, lonlat=True
     )
 
-    return (lons + 180) % 360 - 180, lats
+    lons = xr.DataArray(
+        lons,
+        dims=("cell",),
+        attrs={"units": "degrees_east", "standard_name": "longitude"},
+    )
+    lats = xr.DataArray(
+        lats,
+        dims=("cell",),
+        attrs={"units": "degrees_north", "standard_name": "latitude"},
+    )
+
+    return lons, lats
 
 
 def bitround(ds, keepbits=13, codec=None):
@@ -181,6 +192,7 @@ def healpix_dataset(dataset, zoom=7):
             "long_name": dataset[var].attrs["name"],
             "standard_name": dataset[var].attrs.get("cfName", ""),
             "units": dataset[var].attrs["units"],
+            "grid_mapping": "healpix",
             "type": "forecast"
             if dataset[var].attrs["dataType"] == "fc"
             else "analysis",
@@ -198,18 +210,22 @@ def healpix_dataset(dataset, zoom=7):
             "axis": "Z",
         }
 
-    ds_remap["crs"] = xr.DataArray(
+    crs = xr.DataArray(
         name="crs",
-        data=[np.nan],
-        dims=("crs",),
         attrs={
             "grid_mapping_name": "healpix",
-            "healpix_nside": 2**zoom,
-            "healpix_order": "nest",
+            "refinement_level": zoom,
+            "indexing_scheme": "nested",
         },
     )
 
-    return ds_remap
+    cell = xr.DataArray(
+        np.arange(ds_remap.sizes["cell"]),
+        dims=("cell",),
+        attrs={"standard_name": "healpix_index"},
+    )
+
+    return ds_remap.assign_coords(crs=crs, cell=cell, lat=grid_lat, lon=grid_lon)
 
 
 async def get_client(**kwargs):
