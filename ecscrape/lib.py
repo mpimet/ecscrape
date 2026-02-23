@@ -159,6 +159,11 @@ def bitround(ds, keepbits=13, codec=None):
 
 
 def healpix_dataset(dataset, zoom=7):
+    if all(c in dataset.dims for c in ("lat", "lon")):
+        # Create one-dimensional view of lat/lon grid and
+        # cut out values exactly at the North Pole
+        dataset = dataset.isel(lat=slice(0, -2)).stack(value=("lon", "lat"))
+
     grid_lon, grid_lat = get_latlon_grid(hpz=zoom)
     weight_kwargs = compute_weights_delaunay(
         points=(dataset.lon, dataset.lat), xi=(grid_lon, grid_lat)
