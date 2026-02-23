@@ -1,6 +1,6 @@
 name: ecscrape
 dependencies:
-  - python==3.12
+  - python==3.14
   - aiohttp
   - cartopy
   - cfgrib
@@ -18,6 +18,6 @@ dependencies:
   - pip
   - pip:
     - aiohttp_retry
-    - easygems
-    - gribscan>=0.0.12
+    - easygems>=0.1.4
+    - gribscan>=0.0.16
     - swiftspec
