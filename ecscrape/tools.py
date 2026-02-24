@@ -95,4 +95,5 @@ def main():
         storage_options=lib.get_storage_options(store),
         encoding=lib.get_encoding(ds),
         zarr_format=2,
+        mode="w",
     )
