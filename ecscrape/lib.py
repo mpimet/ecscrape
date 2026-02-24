@@ -139,10 +139,9 @@ def get_latlon_grid(hpz=7, nest=True):
     return lons, lats
 
 
-def bitround(ds, keepbits=13, codec=None):
-    def _bitround(var, keepbits, codec=None):
-        if codec is None:
-            codec = numcodecs.BitRound(keepbits=keepbits)
+def bitround(ds, keepbits=13):
+    def _bitround(var, keepbits):
+        codec = numcodecs.BitRound(keepbits=keepbits)
 
         return codec.decode(codec.encode(var))
 
@@ -151,9 +150,8 @@ def bitround(ds, keepbits=13, codec=None):
         ds,
         kwargs={"keepbits": keepbits},
         dask="parallelized",
+        keep_attrs=True,
     )
-    for var in ds:
-        ds_rounded[var].attrs = ds[var].attrs
 
     return ds_rounded
 
