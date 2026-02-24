@@ -195,7 +195,7 @@ def get_encoding(dataset):
     }
 
 
-def healpix_dataset(dataset, zoom=7):
+def healpix_dataset(dataset, zoom=8):
     if all(c in dataset.dims for c in ("lat", "lon")):
         # Create one-dimensional view of lat/lon grid and
         # cut out values exactly at the North Pole
