@@ -278,3 +278,10 @@ async def get_client(**kwargs):
         raise_for_status=False, retry_options=retry_options
     )
     return retry_client
+
+
+def get_storage_options(store):
+    if store.startswith("swift://"):
+        return {"get_client": get_client}
+    else:
+        return None

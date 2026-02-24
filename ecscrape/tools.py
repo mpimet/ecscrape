@@ -92,7 +92,7 @@ def main():
     ds = lib.healpix_dataset(ecmwf)
     ds.to_zarr(
         store,
-        storage_options={"get_client": lib.get_client},
+        storage_options=lib.get_storage_options(store),
         encoding=lib.get_encoding(ds),
         zarr_format=2,
     )
